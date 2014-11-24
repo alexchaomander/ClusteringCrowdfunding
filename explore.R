@@ -114,7 +114,6 @@ unsuccessful_Community_comments = sqldf("select * from comments inner join
                                          on comments.campid = a.campid")
 unsuccessful_Community_comments = unsuccessful_Community_comments[,-9]
 
-
 #Percentage of successful community
 nrow(successful_Community)/(nrow(unsuccessful_Community) + nrow(successful_Community))
 
@@ -131,7 +130,6 @@ cleanNonPerks = sqldf("select * from cleanNonPerks order by cleanNonPerks.catego
 cleanNonPerks = cleanNonPerks[,-13]
 cleanNonPerks$differential = cleanNonPerks$money_raised - cleanNonPerks$campaign_goal
 
-
 for (i in seq(1:length(cleanNonPerks))) {
     cleanNonPerks[which(cleanNonPerks[i] == ""), i] = NA
 }
@@ -139,17 +137,22 @@ for (i in seq(1:length(cleanNonPerks))) {
 successful_nonPerks = cleanNonPerks[which(cleanNonPerks$successful == 1),]
 unsuccessful_nonPerks = cleanNonPerks[which(cleanNonPerks$successful != 1),]
 
-#Comments of unsuccessful perks
-successful_nonPerks_comments = sqldf("select * from comments, successful_nonPerks where comments.campid = successful_nonPerks.campid")
+# Comments of successful busTechPerks 
+successful_nonPerks_comments = sqldf("select * from comments inner join 
+                                         (select campid from successful_nonPerks) as a
+                                         on comments.campid = a.campid")
+successful_nonPerks_comments = successful_nonPerks_comments[,-9]
 
-#Comments of unssucessful nonPerks 
-unsuccessful_nonPerks_comments = sqldf("select * from comments, unsuccessful_nonPerks where comments.campid = unsuccessful_nonPerks.campid")
+# Comments of unsuccessful busTechPerks
+unsuccessful_nonPerks_comments = sqldf("select * from comments inner join 
+                                         (select campid from unsuccessful_nonPerks) as a
+                                         on comments.campid = a.campid")
+unsuccessful_nonPerks_comments = unsuccessful_nonPerks_comments[,-9]
 
 #Percentage of successful non tech/business
 nrow(successful_nonPerks)/(nrow(unsuccessful_nonPerks) + nrow(successful_nonPerks))
 
 rm(nonPerks)
-rm(success)
 
 #######################################################################################
 
@@ -172,10 +175,17 @@ unsuccessful_smallPerks = cleanSmallPerks[which(cleanSmallPerks$successful != 1)
 
 nrow(successful_smallPerks)/(nrow(unsuccessful_smallPerks) + nrow(successful_smallPerks))
 
-#Comments of successful smallPerks
-successful_smallPerks_comments = sqldf("select comments from comments, successful_smallPerks where comments.campid = successful_smallPerks.campid")
-unsuccessful_nonPerks_comments = sqldf("select comments from comments, unsuccessful_nonPerks where comments.campid = successful_nonPerks.campid")
+# Comments of successful busTechPerks 
+successful_smallPerks_comments = sqldf("select * from comments inner join 
+                                         (select campid from successful_smallPerks) as a
+                                         on comments.campid = a.campid")
+successful_smallPerks_comments = successful_smallPerks_comments[,-9]
 
+# Comments of unsuccessful busTechPerks
+unsuccessful_smallPerks_comments = sqldf("select * from comments inner join 
+                                         (select campid from unsuccessful_smallPerks) as a
+                                         on comments.campid = a.campid")
+unsuccessful_smallPerks_comments = unsuccessful_smallPerks_comments[,-9]
 
 #Comments of unsucessful smallPerks
 
