@@ -29,12 +29,14 @@ successful_busTechPerks_comments = sqldf("select * from comments inner join
                                          (select campid from successful_busTechPerks) as a
                                          on comments.campid = a.campid")
 successful_busTechPerks_comments = successful_busTechPerks_comments[,-9]
+successful_busTechPerks_comments = successful_busTechPerks_comments[!duplicated(successful_busTechPerks_comments),]
 
 # Comments of unsuccessful busTechPerks
 unsuccessful_busTechPerks_comments = sqldf("select * from comments inner join 
                                          (select campid from unsuccessful_busTechPerks) as a
                                          on comments.campid = a.campid")
 unsuccessful_busTechPerks_comments = unsuccessful_busTechPerks_comments[,-9]
+unsuccessful_busTechPerks_comments = successful_busTechPerks_comments[!duplicated(successful_busTechPerks_comments),]
 
 rm(bustechPerks)
 
@@ -107,12 +109,14 @@ successful_Community_comments = sqldf("select * from comments inner join
                                          (select campid from successful_Community) as a
                                          on comments.campid = a.campid")
 successful_Community_comments = successful_Community_comments[,-9]
+successful_Community_comments = successful_Community_comments[!duplicated(successful_Community_comments),]
 
 # Comments of unsuccessful busTechPerks
 unsuccessful_Community_comments = sqldf("select * from comments inner join 
                                          (select campid from unsuccessful_Community) as a
                                          on comments.campid = a.campid")
 unsuccessful_Community_comments = unsuccessful_Community_comments[,-9]
+unsuccessful_Community_comments = unsuccessful_Community_comments[!duplicated(unsuccessful_Community_comments),]
 
 #Percentage of successful community
 nrow(successful_Community)/(nrow(unsuccessful_Community) + nrow(successful_Community))
@@ -142,12 +146,14 @@ successful_nonPerks_comments = sqldf("select * from comments inner join
                                          (select campid from successful_nonPerks) as a
                                          on comments.campid = a.campid")
 successful_nonPerks_comments = successful_nonPerks_comments[,-9]
+successful_nonPerks_comments = successful_nonPerks_comments[!duplicated(successful_nonPerks_comments),]
 
 # Comments of unsuccessful busTechPerks
 unsuccessful_nonPerks_comments = sqldf("select * from comments inner join 
                                          (select campid from unsuccessful_nonPerks) as a
                                          on comments.campid = a.campid")
 unsuccessful_nonPerks_comments = unsuccessful_nonPerks_comments[,-9]
+unsuccessful_nonPerks_comments = unsuccessful_nonPerks_comments[!duplicated(unsuccessful_nonPerks_comments),]
 
 #Percentage of successful non tech/business
 nrow(successful_nonPerks)/(nrow(unsuccessful_nonPerks) + nrow(successful_nonPerks))
@@ -175,19 +181,22 @@ unsuccessful_smallPerks = cleanSmallPerks[which(cleanSmallPerks$successful != 1)
 
 nrow(successful_smallPerks)/(nrow(unsuccessful_smallPerks) + nrow(successful_smallPerks))
 
-# Comments of successful busTechPerks 
+# Comments of successful smallPerks 
 successful_smallPerks_comments = sqldf("select * from comments inner join 
                                          (select campid from successful_smallPerks) as a
                                          on comments.campid = a.campid")
 successful_smallPerks_comments = successful_smallPerks_comments[,-9]
+successful_smallPerks_comments = successful_smallPerks_comments[!duplicated(successful_smallPerks_comments),]
 
-# Comments of unsuccessful busTechPerks
+
+#Comments of unsucessful smallPerks
 unsuccessful_smallPerks_comments = sqldf("select * from comments inner join 
                                          (select campid from unsuccessful_smallPerks) as a
                                          on comments.campid = a.campid")
 unsuccessful_smallPerks_comments = unsuccessful_smallPerks_comments[,-9]
+unsuccessful_smallPerks_comments = unsuccessful_smallPerks_comments[!duplicated(unsuccessful_smallPerks_comments),]
 
-#Comments of unsucessful smallPerks
+
 
 rm(smallPerks)
 rm(success)
