@@ -1,15 +1,15 @@
 setwd("~/Desktop/shared-chao")
 
 require(sqldf)
-library(AppliedPredictiveModeling)
-require(tm)
+require("RTextTools")
+source("sentiment.R")
 
 ### For 'bustechPerks' dataset #############################################################
-bustechPerks = read.csv("data/bus_tech_perks_full.txt", sep="\t")
+busTechPerks = read.csv("data/bus_tech_perks_full.txt", sep="\t")
 success = read.csv("data/campaign_success.txt", sep = "\t")
 comments = read.csv("data/campaign_comments.txt", sep="\t")
 
-cleanBusTechPerks = sqldf("select * from bustechPerks inner join success on bustechPerks.campid = success.campid")
+cleanBusTechPerks = sqldf("select * from busTechPerks inner join success on busTechPerks.campid = success.campid")
 cleanBusTechPerks = cleanBusTechPerks[duplicated(cleanBusTechPerks$campid),]
 cleanBusTechPerks = cleanBusTechPerks[,-7]
 cleanBusTechPerks$differential = cleanBusTechPerks$money_raised - cleanBusTechPerks$campaign_goal
@@ -21,10 +21,7 @@ for (i in seq(1:length(cleanBusTechPerks))) {
     cleanBusTechPerks[which(cleanBusTechPerks[i] == ""), i] = NA
 }
 
-#Percentage of successful business
-nrow(successful_busTechPerks)/(nrow(unsuccessful_busTechPerks) + nrow(successful_busTechPerks))
-
-# Comments of successful busTechPerks 
+# Comments of successful busTechPerks
 successful_busTechPerks_comments = sqldf("select * from comments inner join 
                                          (select campid from successful_busTechPerks) as a
                                          on comments.campid = a.campid")
@@ -37,6 +34,63 @@ unsuccessful_busTechPerks_comments = sqldf("select * from comments inner join
                                          on comments.campid = a.campid")
 unsuccessful_busTechPerks_comments = unsuccessful_busTechPerks_comments[,-9]
 unsuccessful_busTechPerks_comments = successful_busTechPerks_comments[!duplicated(successful_busTechPerks_comments),]
+
+#Percentage of successful business
+nrow(successful_busTechPerks)/(nrow(unsuccessful_busTechPerks) + nrow(successful_busTechPerks))
+
+#Number of unique successful business campaigns
+length(unique(successful_busTechPerks$campid))
+unique_successful_busTechPerks_campid = unique(successful_busTechPerks$campid)
+subset_successful_busTechPerks_campid = sample(unique_successful_busTechPerks_campid, size = 50, replace = FALSE)
+
+
+#Number of unique successful business campaigns
+length(unique(unsuccessful_busTechPerks$campid))
+unique_unsuccessful_busTechPerks_campid = unique(unsuccessful_busTechPerks$campid)
+subset_unsuccessful_busTechPerks_campid = sample(unique_unsuccessful_busTechPerks_campid, size = 100, replace = FALSE)
+
+subset = c(subset_successful_busTechPerks_campid, subset_unsuccessful_busTechPerks_campid)
+subset = data.frame(campid = subset)
+
+subset_busTechPerks = sqldf("select * from busTechPerks inner join subset on
+                            busTechPerks.campid = subset.campid inner join success on busTechPerks.campid = success.campid")
+subset_busTechPerks = subset_busTechPerks[,c(-7,-8)]
+
+
+# CREATE THE DOCUMENT-TERM MATRIX
+start.time = Sys.time()
+doc_matrix = create_matrix(subset_busTechPerks$perk_descr, language="english", removeNumbers=TRUE, stemWords=TRUE, removeSparseTerms=0.999)
+end.time = Sys.time()
+time.taken = end.time - start.time
+time.taken
+
+#state what is training set and what is test
+trainingsize = 0.8*nrow(subset_busTechPerks)
+container <- create_container(doc_matrix, subset_busTechPerks$successful, trainSize=1:trainingsize,testSize=(trainingsize+1):nrow(subset_busTechPerks), virgin=FALSE)
+SVM = train_model(container, "SVM")
+GLMNET <- train_model(container,"GLMNET")
+MAXENT <- train_model(container,"MAXENT")
+BOOSTING <- train_model(container,"BOOSTING")
+BAGGING <- train_model(container,"BAGGING")
+RF <- train_model(container,"RF")
+#NNET <- train_model(container,"NNET")
+
+
+SVM_CLASSIFY <- classify_model(container, SVM)
+GLMNET_CLASSIFY <- classify_model(container, GLMNET)
+MAXENT_CLASSIFY <- classify_model(container, MAXENT)
+BOOSTING_CLASSIFY <- classify_model(container, BOOSTING)
+RF_CLASSIFY <- classify_model(container, RF)
+#NNET_CLASSIFY <- classify_model(container, NNET)
+
+analytics <- create_analytics(container, cbind(SVM_CLASSIFY, RF_CLASSIFY, BOOSTING_CLASSIFY, MAXENT_CLASSIFY))
+summary(analytics)
+
+# CREATE THE data.frame SUMMARIES
+topic_summary <- analytics@label_summary
+alg_summary <- analytics@algorithm_summary
+ens_summary <-analytics@ensemble_summary
+doc_summary <- analytics@document_summary
 
 rm(bustechPerks)
 
@@ -89,6 +143,8 @@ rm(bustechPerks)
 
 ### For Community Dataset ###
 community = read.csv("data/Community perks.txt", sep="\t")
+success = read.csv("data/campaign_success.txt", sep = "\t")
+comments = read.csv("data/campaign_comments.txt", sep="\t")
 
 #Can try to do same analysis for Community as the others
 cleanCommunity = sqldf("select * from community inner join success on community.campid = success.campid")
@@ -104,14 +160,14 @@ for (i in seq(1:length(cleanCommunity))) {
 successful_Community = cleanCommunity[which(cleanCommunity$successful == 1),]
 unsuccessful_Community = cleanCommunity[which(cleanCommunity$successful != 1),]
 
-# Comments of successful busTechPerks 
+# Comments of successful community perks 
 successful_Community_comments = sqldf("select * from comments inner join 
                                          (select campid from successful_Community) as a
                                          on comments.campid = a.campid")
 successful_Community_comments = successful_Community_comments[,-9]
 successful_Community_comments = successful_Community_comments[!duplicated(successful_Community_comments),]
 
-# Comments of unsuccessful busTechPerks
+# Comments of unsuccessful community perks
 unsuccessful_Community_comments = sqldf("select * from comments inner join 
                                          (select campid from unsuccessful_Community) as a
                                          on comments.campid = a.campid")
@@ -121,11 +177,68 @@ unsuccessful_Community_comments = unsuccessful_Community_comments[!duplicated(un
 #Percentage of successful community
 nrow(successful_Community)/(nrow(unsuccessful_Community) + nrow(successful_Community))
 
+#Number of unique successful community campaigns
+length(unique(successful_Community$campid))
+unique_successful_Community_campid = unique(successful_Community$campid)
+subset_successful_Community_campid = sample(unique_successful_Community_campid, size = 50, replace = FALSE)
+
+
+#Number of unique successful business campaigns
+length(unique(unsuccessful_Community$campid))
+unique_unsuccessful_Community_campid = unique(unsuccessful_Community$campid)
+subset_unsuccessful_Community_campid = sample(unique_unsuccessful_Community_campid, size = 100, replace = FALSE)
+
+subset = c(subset_successful_Community_campid, subset_unsuccessful_Community_campid)
+subset = data.frame(campid = subset)
+
+subset_Community = sqldf("select * from community inner join subset on
+                            community.campid = subset.campid inner join success on community.campid = success.campid")
+subset_Community = subset_Community[,c(-13,-14)]
+
+
+# CREATE THE DOCUMENT-TERM MATRIX
+start.time = Sys.time()
+doc_matrix = create_matrix(subset_Community$perk_descr, language="english", removeNumbers=TRUE, stemWords=TRUE, removeSparseTerms=0.999)
+end.time = Sys.time()
+time.taken = end.time - start.time
+time.taken
+
+#state what is training set and what is test
+trainingsize = 0.8*nrow(subset_Community)
+container <- create_container(doc_matrix, subset_Community$successful, trainSize=1:trainingsize,testSize=(trainingsize+1):nrow(subset_Community), virgin=FALSE)
+SVM = train_model(container, "SVM")
+GLMNET <- train_model(container,"GLMNET")
+MAXENT <- train_model(container,"MAXENT")
+BOOSTING <- train_model(container,"BOOSTING")
+BAGGING <- train_model(container,"BAGGING")
+RF <- train_model(container,"RF")
+#NNET <- train_model(container,"NNET")
+
+
+SVM_CLASSIFY <- classify_model(container, SVM)
+GLMNET_CLASSIFY <- classify_model(container, GLMNET)
+MAXENT_CLASSIFY <- classify_model(container, MAXENT)
+BOOSTING_CLASSIFY <- classify_model(container, BOOSTING)
+RF_CLASSIFY <- classify_model(container, RF)
+#NNET_CLASSIFY <- classify_model(container, NNET)
+
+analytics <- create_analytics(container, cbind(SVM_CLASSIFY, RF_CLASSIFY, BOOSTING_CLASSIFY, MAXENT_CLASSIFY))
+summary(analytics)
+
+# CREATE THE data.frame SUMMARIES
+topic_summary <- analytics@label_summary
+alg_summary <- analytics@algorithm_summary
+ens_summary <-analytics@ensemble_summary
+doc_summary <- analytics@document_summary
+
 rm(community)
 #######################################################################################
 
 ### For nonPerks Dataset ###
 nonPerks = read.csv("data/nonTech nonBus nonCommunity perks.txt", sep="\t")
+success = read.csv("data/campaign_success.txt", sep = "\t")
+comments = read.csv("data/campaign_comments.txt", sep="\t")
+
 
 #Again try the same analysis for nonPerks as the others
 cleanNonPerks = sqldf("select * from nonPerks inner join success on nonPerks.campid = success.campid")
@@ -158,12 +271,69 @@ unsuccessful_nonPerks_comments = unsuccessful_nonPerks_comments[!duplicated(unsu
 #Percentage of successful non tech/business
 nrow(successful_nonPerks)/(nrow(unsuccessful_nonPerks) + nrow(successful_nonPerks))
 
+#Number of unique successful community campaigns
+length(unique(successful_nonPerks$campid))
+unique_successful_nonPerks_campid = unique(successful_nonPerks$campid)
+subset_successful_nonPerks_campid = sample(unique_successful_nonPerks_campid, size = 50, replace = FALSE)
+
+
+#Number of unique successful business campaigns
+length(unique(unsuccessful_nonPerks$campid))
+unique_unsuccessful_nonPerks_campid = unique(unsuccessful_nonPerks$campid)
+subset_unsuccessful_nonPerks_campid = sample(unique_unsuccessful_nonPerks_campid, size = 100, replace = FALSE)
+
+subset = c(subset_successful_nonPerks_campid, subset_unsuccessful_nonPerks_campid)
+subset = data.frame(campid = subset)
+
+subset_nonPerks = sqldf("select * from nonPerks inner join subset on
+                         nonPerks.campid = subset.campid inner join success on nonPerks.campid = success.campid")
+subset_nonPerks = subset_nonPerks[,c(-13,-14)]
+
+
+# CREATE THE DOCUMENT-TERM MATRIX
+start.time = Sys.time()
+doc_matrix = create_matrix(subset_nonPerks$perk_descr, language="english", removeNumbers=TRUE, stemWords=TRUE, removeSparseTerms=0.999)
+end.time = Sys.time()
+time.taken = end.time - start.time
+time.taken
+
+#state what is training set and what is test
+trainingsize = 0.8*nrow(subset_nonPerks)
+container <- create_container(doc_matrix, subset_nonPerks$successful, trainSize=1:trainingsize,testSize=(trainingsize+1):nrow(subset_nonPerks), virgin=FALSE)
+SVM = train_model(container, "SVM")
+GLMNET <- train_model(container,"GLMNET")
+MAXENT <- train_model(container,"MAXENT")
+BOOSTING <- train_model(container,"BOOSTING")
+BAGGING <- train_model(container,"BAGGING")
+RF <- train_model(container,"RF")
+#NNET <- train_model(container,"NNET")
+
+
+SVM_CLASSIFY <- classify_model(container, SVM)
+GLMNET_CLASSIFY <- classify_model(container, GLMNET)
+MAXENT_CLASSIFY <- classify_model(container, MAXENT)
+BOOSTING_CLASSIFY <- classify_model(container, BOOSTING)
+RF_CLASSIFY <- classify_model(container, RF)
+#NNET_CLASSIFY <- classify_model(container, NNET)
+
+analytics <- create_analytics(container, cbind(SVM_CLASSIFY, RF_CLASSIFY, BOOSTING_CLASSIFY, MAXENT_CLASSIFY))
+summary(analytics)
+
+# CREATE THE data.frame SUMMARIES
+topic_summary <- analytics@label_summary
+alg_summary <- analytics@algorithm_summary
+ens_summary <-analytics@ensemble_summary
+doc_summary <- analytics@document_summary
+
 rm(nonPerks)
 
 #######################################################################################
 
 ### For smallPerks dataset ###
 smallPerks = read.csv("data/Tech and Small Business perks.txt", sep="\t")
+success = read.csv("data/campaign_success.txt", sep = "\t")
+comments = read.csv("data/campaign_comments.txt", sep="\t")
+
 
 #Apply same techniques to study that. Appears to have more missing data
 
@@ -179,7 +349,7 @@ for (i in seq(1:length(cleanSmallPerks))) {
 successful_smallPerks = cleanSmallPerks[which(cleanSmallPerks$successful == 1),]
 unsuccessful_smallPerks = cleanSmallPerks[which(cleanSmallPerks$successful != 1),]
 
-nrow(successful_smallPerks)/(nrow(unsuccessful_smallPerks) + nrow(successful_smallPerks))
+
 
 # Comments of successful smallPerks 
 successful_smallPerks_comments = sqldf("select * from comments inner join 
@@ -196,7 +366,61 @@ unsuccessful_smallPerks_comments = sqldf("select * from comments inner join
 unsuccessful_smallPerks_comments = unsuccessful_smallPerks_comments[,-9]
 unsuccessful_smallPerks_comments = unsuccessful_smallPerks_comments[!duplicated(unsuccessful_smallPerks_comments),]
 
+nrow(successful_smallPerks)/(nrow(unsuccessful_smallPerks) + nrow(successful_smallPerks))
 
+#Number of unique successful smallPerks campaigns
+length(unique(successful_smallPerks$campid))
+unique_successful_smallPerks_campid = unique(successful_smallPerks$campid)
+subset_successful_smallPerks_campid = sample(unique_successful_smallPerks_campid, size = 50, replace = FALSE)
+
+
+#Number of unique successful smallPerks campaigns
+length(unique(unsuccessful_smallPerks$campid))
+unique_unsuccessful_smallPerks_campid = unique(unsuccessful_smallPerks$campid)
+subset_unsuccessful_smallPerks_campid = sample(unique_unsuccessful_smallPerks_campid, size = 100, replace = FALSE)
+
+subset = c(subset_successful_smallPerks_campid, subset_unsuccessful_smallPerks_campid)
+subset = data.frame(campid = subset)
+
+subset_smallPerks = sqldf("select * from smallPerks inner join subset on
+                        smallPerks.campid = subset.campid inner join success on smallPerks.campid = success.campid")
+subset_smallPerks = subset_smallPerks[,c(-13,-14)]
+
+
+# CREATE THE DOCUMENT-TERM MATRIX
+start.time = Sys.time()
+doc_matrix = create_matrix(subset_smallPerks$perk_descr, language="english", removeNumbers=TRUE, stemWords=TRUE, removeSparseTerms=0.999)
+end.time = Sys.time()
+time.taken = end.time - start.time
+time.taken
+
+#state what is training set and what is test
+trainingsize = 0.8*nrow(subset_smallPerks)
+container <- create_container(doc_matrix, subset_smallPerks$successful, trainSize=1:trainingsize,testSize=(trainingsize+1):nrow(subset_smallPerks), virgin=FALSE)
+SVM = train_model(container, "SVM")
+GLMNET <- train_model(container,"GLMNET")
+MAXENT <- train_model(container,"MAXENT")
+BOOSTING <- train_model(container,"BOOSTING")
+BAGGING <- train_model(container,"BAGGING")
+RF <- train_model(container,"RF")
+#NNET <- train_model(container,"NNET")
+
+
+SVM_CLASSIFY <- classify_model(container, SVM)
+GLMNET_CLASSIFY <- classify_model(container, GLMNET)
+MAXENT_CLASSIFY <- classify_model(container, MAXENT)
+BOOSTING_CLASSIFY <- classify_model(container, BOOSTING)
+RF_CLASSIFY <- classify_model(container, RF)
+#NNET_CLASSIFY <- classify_model(container, NNET)
+
+analytics <- create_analytics(container, cbind(SVM_CLASSIFY, RF_CLASSIFY, BOOSTING_CLASSIFY, MAXENT_CLASSIFY))
+summary(analytics)
+
+# CREATE THE data.frame SUMMARIES
+topic_summary <- analytics@label_summary
+alg_summary <- analytics@algorithm_summary
+ens_summary <-analytics@ensemble_summary
+doc_summary <- analytics@document_summary
 
 rm(smallPerks)
 rm(success)
@@ -248,22 +472,10 @@ rm(success)
 # correlation between perks and campaign success
 # 
 
-    
-
 
 ### Calculate summary statistics for campaigns
 # Goal, duration, number of backers, final amount
 # Categorize by successful, failed, all
-
-
-library("RTextTools")
-
-# CREATE THE DOCUMENT-TERM MATRIX
-doc_matrix = create_matrix(cleanBusTechPerks$perk_descr, language="english", removeNumbers=TRUE, stemWords=TRUE, removeSparseTerms=0.999)
-
-
-container <- create_container(doc_matrix, perk$code, trainSize=1:150,testSize=151:223, virgin=FALSE)
-
 
 
 
