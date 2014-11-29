@@ -1,50 +1,60 @@
-#' Calculates sentiment score.
-#'
-#' Splits string into words (by default at space), looks up affinity score for each word and returns average.
-#' 
-#' @param x String
-#' @param dict Dictionary to use: either "afinn111" or "afinn96"
-#' @param sep Charater string to use as word boundary
-#' @param removePunct If TRUE, removes punctuation from words
-#' @param ... not used
-#' @export sentiment sentiment.default
-#' @aliases sentiment.default
-#' @return A numerical value between -5 and +5. Returns \code{NaN} if none of the words are found in the dictionary.
-#' @family sentiment functions
-#' @examples 
-#' sentiment(c("There is a terrible mistake in this work", "This is wonderful!"))
-sentiment <- function(x, dict=c("afinn111", "afinn96"), sep=" ", removePunct=TRUE, ...){
-  UseMethod("sentiment", x)
-}
+setwd("~/Desktop/shared-chao/")
 
-sentiment.default <- function(x, dict=c("afinn111", "afinn96"), sep=" ", removePunct=TRUE, ...){
-  dict <- match.arg(dict)
-  dict <- if(dict=="afinn111") afinn111 else afinn96
-  w <- strsplit(x, split=" ")
-  if(removePunct) w <- lapply(w, function(xx)gsub("[[:punct:]]", "", xx))
-  vapply(w, 
-      function(xx)mean(unname(dict[xx]), na.rm=TRUE),
-      FUN.VALUE=1,
-      USE.NAMES=FALSE
-  )
-}
+hu.liu.pos = scan('opinion-lexicon/positive-words.txt',
+                    what='character', comment.char=';')
 
-#' Calculates sentiment score for twitter status object.
-#'
-#' Splits string into words (by default at space), looks up affinity score for each word and returns average
-#' 
-#' @param x Object of class \code{status}, originating in package \code{twitteR}.  See also \code{\link[twitteR]{searchTwitter}}
-#' @param ... Passed to \code{\link{sentiment.default}}
-#' @method sentiment status
-#' @export
-#' @family sentiment functions
-#' @examples 
-#' if(require(twitteR)){
-#' tweets  <- searchTwitter("#mcdonalds", n=25)
-#' sentiment(tweets[[1]])
-#' sapply(tweets, sentiment)
-#' }
-sentiment.status <- function(x, ...){
-  x <- x$text
-  sentiment(x, ...)
+hu.liu.neg = scan('opinion-lexicon/negative-words.txt',
+                    what='character', comment.char=';')
+
+score.sentiment = function(sentences, pos.words, neg.words, .progress='none') {
+    require(plyr)
+    require(stringr)
+    
+    # we got a vector of sentences. plyr will handle a list
+    # or a vector as an "l" for us
+    scores = laply(sentences, function(sentence, pos.words, neg.words) {
+        
+        # clean up sentences with R's regex-driven global substitute, gsub():
+        sentence = gsub('[[:punct:]]', '', sentence)
+        sentence = gsub('[[:cntrl:]]', '', sentence)
+        sentence = gsub('\\d+', '', sentence)
+        # and convert to lower case:
+        sentence = tolower(sentence)
+        
+        # split into words. str_split is in the stringr package
+        word.list = str_split(sentence, '\\s+')
+        # sometimes a list() is one level of hierarchy too much
+        words = unlist(word.list)
+        
+        # compare our words to the dictionaries of positive & negative terms
+        pos.matches = match(words, pos.words)
+        neg.matches = match(words, neg.words)
+        
+        # match() returns the position of the matched term or NA
+        # we just want a TRUE/FALSE:
+        pos.matches = !is.na(pos.matches)
+        neg.matches = !is.na(neg.matches)
+        
+        # and conveniently enough, TRUE/FALSE will be treated as 1/0 by sum():
+        score = sum(pos.matches) - sum(neg.matches)
+        
+        return(score)
+    }, pos.words, neg.words, .progress=.progress )
+    
+    scores.df = data.frame(text=sentences, score=scores)
+    sentiment = laply(scores, function(score) {
+        if (score > 4) {
+            sent = "very positive"
+        } else if (score > 0) {
+            sent = "positive"
+        } else if (score < -4) {
+            sent = "very negative"
+        } else if (score < 0) {
+            sent = "negative"
+        } else {
+            sent = "neutral"
+        }
+    })
+    scores.df$sentiment = sentiment
+    return(scores.df)
 }
