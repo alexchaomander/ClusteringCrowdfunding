@@ -26,6 +26,8 @@ successful_smallPerks_comments = sqldf("select * from comments inner join
                                        on comments.campid = a.campid")
 successful_smallPerks_comments = successful_smallPerks_comments[,-9]
 successful_smallPerks_comments = successful_smallPerks_comments[!duplicated(successful_smallPerks_comments),]
+successful_smallPerks_comment_score = 
+    score.sentiment(successful_smallPerks_comments$comment, hu.liu.pos, hu.liu.neg, .progress="text")
 
 
 #Comments of unsucessful smallPerks
@@ -34,6 +36,10 @@ unsuccessful_smallPerks_comments = sqldf("select * from comments inner join
                                          on comments.campid = a.campid")
 unsuccessful_smallPerks_comments = unsuccessful_smallPerks_comments[,-9]
 unsuccessful_smallPerks_comments = unsuccessful_smallPerks_comments[!duplicated(unsuccessful_smallPerks_comments),]
+unsuccessful_smallPerks_comment_score = 
+    score.sentiment(unsuccessful_smallPerks_comments$comment, hu.liu.pos, hu.liu.neg, .progress="text")
+
+
 
 nrow(successful_smallPerks)/(nrow(unsuccessful_smallPerks) + nrow(successful_smallPerks))
 

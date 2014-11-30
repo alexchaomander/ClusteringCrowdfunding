@@ -30,12 +30,21 @@ successful_Community_comments = sqldf("select * from comments inner join
 successful_Community_comments = successful_Community_comments[,-9]
 successful_Community_comments = successful_Community_comments[!duplicated(successful_Community_comments),]
 
+successful_Community_comment_score = 
+    score.sentiment(successful_Community_comments$comment, hu.liu.pos, hu.liu.neg, .progress="text")
+
+
 # Comments of unsuccessful community perks
 unsuccessful_Community_comments = sqldf("select * from comments inner join 
                                         (select campid from unsuccessful_Community) as a
                                         on comments.campid = a.campid")
 unsuccessful_Community_comments = unsuccessful_Community_comments[,-9]
 unsuccessful_Community_comments = unsuccessful_Community_comments[!duplicated(unsuccessful_Community_comments),]
+
+unsuccessful_Community_comment_score = 
+    score.sentiment(unsuccessful_Community_comments$comment, hu.liu.pos, hu.liu.neg, .progress="text")
+
+
 
 #Percentage of successful community
 nrow(successful_Community)/(nrow(unsuccessful_Community) + nrow(successful_Community))

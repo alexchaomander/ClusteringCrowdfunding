@@ -31,12 +31,20 @@ successful_nonPerks_comments = sqldf("select * from comments inner join
 successful_nonPerks_comments = successful_nonPerks_comments[,-9]
 successful_nonPerks_comments = successful_nonPerks_comments[!duplicated(successful_nonPerks_comments),]
 
+successful_nonPerks_comment_score = 
+    score.sentiment(successful_nonPerks_comments$comment, hu.liu.pos, hu.liu.neg, .progress="text")
+
+
+
 # Comments of unsuccessful busTechPerks
 unsuccessful_nonPerks_comments = sqldf("select * from comments inner join 
                                        (select campid from unsuccessful_nonPerks) as a
                                        on comments.campid = a.campid")
 unsuccessful_nonPerks_comments = unsuccessful_nonPerks_comments[,-9]
 unsuccessful_nonPerks_comments = unsuccessful_nonPerks_comments[!duplicated(unsuccessful_nonPerks_comments),]
+unsuccessful_nonPerks_comment_score = 
+    score.sentiment(unsuccessful_nonPerks_comments$comment, hu.liu.pos, hu.liu.neg, .progress="text")
+
 
 #Percentage of successful non tech/business
 nrow(successful_nonPerks)/(nrow(unsuccessful_nonPerks) + nrow(successful_nonPerks))

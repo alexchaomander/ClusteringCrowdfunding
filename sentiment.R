@@ -1,3 +1,5 @@
+### Function to calculate the sentiment of a string. Makes use of the Hu/Liu lexicon of positive and negative words
+
 setwd("~/Desktop/shared-chao/")
 
 hu.liu.pos = scan('opinion-lexicon/positive-words.txt',
