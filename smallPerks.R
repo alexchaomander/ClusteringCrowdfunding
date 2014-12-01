@@ -6,17 +6,17 @@ comments = read.csv("data/campaign_comments.txt", sep="\t")
 
 #Apply same techniques to study that. Appears to have more missing data
 
-cleanSmallPerks = sqldf("select * from smallPerks inner join success on smallPerks.campid = success.campid")
-cleanSmallPerks$perks_claimed = as.numeric(paste(cleanSmallPerks$perks_claimed))
+smallPerks = sqldf("select * from smallPerks inner join success on smallPerks.campid = success.campid")
+smallPerks$perks_claimed = as.numeric(paste(smallPerks$perks_claimed))
 #can I regard NAs as 0?
-cleanSmallPerks$differential = cleanSmallPerks$money_raised - cleanSmallPerks$campaign_goal
+smallPerks$differential = smallPerks$money_raised - smallPerks$campaign_goal
 
-for (i in seq(1:length(cleanSmallPerks))) {
-    cleanSmallPerks[which(cleanSmallPerks[i] == ""), i] = NA
+for (i in seq(1:length(smallPerks))) {
+    smallPerks[which(smallPerks[i] == ""), i] = NA
 }
 
-successful_smallPerks = cleanSmallPerks[which(cleanSmallPerks$successful == 1),]
-unsuccessful_smallPerks = cleanSmallPerks[which(cleanSmallPerks$successful != 1),]
+successful_smallPerks = smallPerks[which(smallPerks$successful == 1),]
+unsuccessful_smallPerks = smallPerks[which(smallPerks$successful != 1),]
 
 
 

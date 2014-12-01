@@ -10,18 +10,18 @@ success = read.csv("data/campaign_success.txt", sep = "\t")
 comments = read.csv("data/campaign_comments.txt", sep="\t")
 
 #Can try to do same analysis for Community as the others
-cleanCommunity = sqldf("select * from community inner join success on community.campid = success.campid")
-cleanCommunity = sqldf("select * from cleanCommunity order by cleanCommunity.category")
-cleanCommunity = cleanCommunity[,-13]
-cleanCommunity$differential = cleanCommunity$money_raised - cleanCommunity$campaign_goal
+community = sqldf("select * from community inner join success on community.campid = success.campid")
+community = sqldf("select * from community order by community.category")
+community = community[,-13]
+community$differential = community$money_raised - community$campaign_goal
 
 
-for (i in seq(1:length(cleanCommunity))) {
-    cleanCommunity[which(cleanCommunity[i] == ""), i] = NA
+for (i in seq(1:length(community))) {
+    community[which(community[i] == ""), i] = NA
 }
 
-successful_Community = cleanCommunity[which(cleanCommunity$successful == 1),]
-unsuccessful_Community = cleanCommunity[which(cleanCommunity$successful != 1),]
+successful_Community = community[which(community$successful == 1),]
+unsuccessful_Community = community[which(community$successful != 1),]
 
 # Comments of successful community perks 
 successful_Community_comments = sqldf("select * from comments inner join 

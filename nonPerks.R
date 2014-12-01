@@ -11,18 +11,18 @@ comments = read.csv("data/campaign_comments.txt", sep="\t")
 
 
 #Again try the same analysis for nonPerks as the others
-cleanNonPerks = sqldf("select * from nonPerks inner join success on nonPerks.campid = success.campid")
-cleanNonPerks$perks_claimed = as.numeric(paste(cleanNonPerks$perks_claimed))
-cleanNonPerks = sqldf("select * from cleanNonPerks order by cleanNonPerks.category")
-cleanNonPerks = cleanNonPerks[,-13]
-cleanNonPerks$differential = cleanNonPerks$money_raised - cleanNonPerks$campaign_goal
+nonPerks = sqldf("select * from nonPerks inner join success on nonPerks.campid = success.campid")
+nonPerks$perks_claimed = as.numeric(paste(nonPerks$perks_claimed))
+nonPerks = sqldf("select * from nonPerks order by nonPerks.category")
+nonPerks = nonPerks[,-13]
+nonPerks$differential = nonPerks$money_raised - nonPerks$campaign_goal
 
-for (i in seq(1:length(cleanNonPerks))) {
-    cleanNonPerks[which(cleanNonPerks[i] == ""), i] = NA
+for (i in seq(1:length(nonPerks))) {
+    nonPerks[which(nonPerks[i] == ""), i] = NA
 }
 
-successful_nonPerks = cleanNonPerks[which(cleanNonPerks$successful == 1),]
-unsuccessful_nonPerks = cleanNonPerks[which(cleanNonPerks$successful != 1),]
+successful_nonPerks = nonPerks[which(nonPerks$successful == 1),]
+unsuccessful_nonPerks = nonPerks[which(nonPerks$successful != 1),]
 
 # Comments of successful busTechPerks 
 successful_nonPerks_comments = sqldf("select * from comments inner join 

@@ -1,4 +1,4 @@
-#Function to create a Term Document Matrix
+#Function to create a Documenet Term Matrix
 
 createTDM = function(corpus, .progress='none') {
     require(tm)
@@ -53,5 +53,4 @@ createTDM = function(corpus, .progress='none') {
 #     ylab("") +
 #     theme(panel.background = element_blank()) +
 #     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
-
 

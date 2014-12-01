@@ -45,11 +45,11 @@ score.sentiment = function(sentences, pos.words, neg.words, .progress='none') {
     
     scores.df = data.frame(text=sentences, score=scores)
     sentiment = laply(scores, function(score) {
-        if (score > 4) {
+        if (score > 3) {
             sent = "very positive"
         } else if (score > 0) {
             sent = "positive"
-        } else if (score < -4) {
+        } else if (score < -3) {
             sent = "very negative"
         } else if (score < 0) {
             sent = "negative"
