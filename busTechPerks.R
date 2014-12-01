@@ -3,37 +3,97 @@ setwd("~/Desktop/shared-chao")
 require(sqldf)
 require("RTextTools")
 source("sentiment.R")
+source("createTDM.R")
 
-### For 'bustechPerks' dataset #############################################################
-busTechPerks = read.csv("data/bus_tech_perks_full.txt", sep="\t")
+####################### For 'bustechPerks' dataset ###################################
 success = read.csv("data/campaign_success.txt", sep = "\t")
 comments = read.csv("data/campaign_comments.txt", sep="\t")
 
-cleanBusTechPerks = sqldf("select * from busTechPerks inner join success on busTechPerks.campid = success.campid")
-cleanBusTechPerks = cleanBusTechPerks[duplicated(cleanBusTechPerks$campid),]
-cleanBusTechPerks = cleanBusTechPerks[,-7]
-cleanBusTechPerks$differential = cleanBusTechPerks$money_raised - cleanBusTechPerks$campaign_goal
+busTechPerks = sqldf("select * from busTechPerks inner join success on busTechPerks.campid = success.campid")
+busTechPerks = busTechPerks[,-7]
+busTechPerks$differential = busTechPerks$money_raised - busTechPerks$campaign_goal
 
-successful_busTechPerks = cleanBusTechPerks[which(cleanBusTechPerks$successful == 1),]
-unsuccessful_busTechPerks = cleanBusTechPerks[which(cleanBusTechPerks$successful != 1),]
-
-for (i in seq(1:length(cleanBusTechPerks))) {
-    cleanBusTechPerks[which(cleanBusTechPerks[i] == ""), i] = NA
+for (i in seq(1:length(busTechPerks))) {
+    busTechPerks[which(busTechPerks[i] == ""), i] = NA
 }
 
-# Comments of successful busTechPerks
+####################### For the entire dataset #######################################
+require(reshape2)
+
+busTechPerks_TDM = createTDM(busTechPerks$perk_descr, "text")
+#Words that are in at least 2000 documents (descriptions)
+findFreqTerms(busTechPerks_TDM, lowfreq = 2000)
+findFreqTerms(busTechPerks_TDM, lowfreq = 5000)
+
+TDM.common = removeSparseTerms(busTechPerks_TDM, sparse = 0.90)
+inspect(TDM.common[1:11, 1:10])
+
+TDM.common = as.matrix(TDM.common)
+TDM.common = melt(TDM.common, value.name = "count")
+temp = TDM.common[1:11000,]
+
+table(TDM.common$Terms, TDM.common$count)
+
+require(ggplot2)
+
+ggplot(temp, aes(x = Docs, y = Terms, fill = count)) +
+    geom_tile(color = "white") +
+    scale_fill_gradient(high="#FF0000" , low="#FFFFFF") +
+    ylab("") +
+    xlab("Campaigns") +
+    ggtitle("Word Frequency Matrix Across Campaigns") + 
+    theme(panel.background = element_blank()) +
+    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+
+
+####################### For the successful campaigns #######################################
+
+successful_busTechPerks = busTechPerks[which(busTechPerks$successful == 1),]
+
+
+
+
+####################### For the unsuccessful campaigns #######################################
+unsuccessful_busTechPerks = busTechPerks[which(busTechPerks$successful != 1),]
+
+####################### Comments of successful busTechPerks ##################################
+
 successful_busTechPerks_comments = sqldf("select * from comments inner join 
                                          (select campid from successful_busTechPerks) as a
                                          on comments.campid = a.campid")
 successful_busTechPerks_comments = successful_busTechPerks_comments[,-9]
 successful_busTechPerks_comments = successful_busTechPerks_comments[!duplicated(successful_busTechPerks_comments),]
 
-# Comments of unsuccessful busTechPerks
+successful_busTechPerks_comment_score = 
+    score.sentiment(successful_busTechPerks_comments$comment, hu.liu.pos, hu.liu.neg, .progress="text")
+
+successful_busTechPerks_sentiment_counts = table(successful_busTechPerks_comment_score$sentiment)
+
+bp = barplot(unsuccessful_busTechPerks_sentiment_counts[order(unsuccessful_busTechPerks_sentiment_counts, c(4,1,2,3,5))]
+             ,xlab = "sentiment", ylab = "frequency", main = "Frequency of Sentiment Scores for Successful BusTechPerks",
+             col = "blue", ylim = c(0, 25000),
+             args.legend = list(title = "Sentiment Score", x = "topleft", cex = .7))
+text(bp, 0, round(successful_busTechPerks_sentiment_counts[order(unsuccessful_busTechPerks_sentiment_counts, c(4,1,2,3,5))], 1),cex=1,pos=3)
+
+####################### Comments of unsuccessful busTechPerks ##################################
 unsuccessful_busTechPerks_comments = sqldf("select * from comments inner join 
                                            (select campid from unsuccessful_busTechPerks) as a
                                            on comments.campid = a.campid")
 unsuccessful_busTechPerks_comments = unsuccessful_busTechPerks_comments[,-9]
-unsuccessful_busTechPerks_comments = successful_busTechPerks_comments[!duplicated(successful_busTechPerks_comments),]
+unsuccessful_busTechPerks_comments = unsuccessful_busTechPerks_comments[!duplicated(unsuccessful_busTechPerks_comments),]
+
+unsuccessful_busTechPerks_comment_score = 
+    score.sentiment(unsuccessful_busTechPerks_comments$comment, hu.liu.pos, hu.liu.neg, .progress="text")
+
+unsuccessful_busTechPerks_sentiment_counts = table(unsuccessful_busTechPerks_comment_score$sentiment)
+
+bp = barplot(unsuccessful_busTechPerks_sentiment_counts[order(unsuccessful_busTechPerks_sentiment_counts, c(4,1,2,3,5))]
+             ,xlab = "sentiment", ylab = "frequency", main = "Frequency of Sentiment Scores for Unsuccessful BusTechPerks",
+             col = "blue", ylim = c(0, 25000),
+             args.legend = list(title = "Sentiment Score", x = "topleft", cex = .7))
+text(bp, 0, round(unsuccessful_busTechPerks_sentiment_counts[order(unsuccessful_busTechPerks_sentiment_counts, c(4,1,2,3,5))], 1),cex=1,pos=3)
+
+
 
 #Percentage of successful business
 nrow(successful_busTechPerks)/(nrow(unsuccessful_busTechPerks) + nrow(successful_busTechPerks))
@@ -57,7 +117,7 @@ subset_busTechPerks = sqldf("select * from busTechPerks inner join subset on
 subset_busTechPerks = subset_busTechPerks[,c(-7,-8)]
 
 
-# CREATE THE DOCUMENT-TERM MATRIX
+# CREATE THE DOCUMENT-TERM MATRIX FOR CLASSIFICATION
 start.time = Sys.time()
 doc_matrix = create_matrix(subset_busTechPerks$perk_descr, language="english", removeNumbers=TRUE, stemWords=TRUE, removeSparseTerms=0.999)
 end.time = Sys.time()
