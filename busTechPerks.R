@@ -195,11 +195,25 @@ successful_busTechPerks_comment_score =
 
 successful_busTechPerks_sentiment_counts = table(successful_busTechPerks_comment_score$sentiment)
 
-bp = barplot(unsuccessful_busTechPerks_sentiment_counts[order(unsuccessful_busTechPerks_sentiment_counts, c(4,1,2,3,5))]
+bp = barplot(successful_busTechPerks_sentiment_counts[order(successful_busTechPerks_sentiment_counts, c(4,1,2,3,5))]
              ,xlab = "sentiment", ylab = "frequency", main = "Frequency of Sentiment Scores for Successful BusTechPerks",
              col = "blue", ylim = c(0, 25000),
              args.legend = list(title = "Sentiment Score", x = "topleft", cex = .7))
-text(bp, 0, round(successful_busTechPerks_sentiment_counts[order(unsuccessful_busTechPerks_sentiment_counts, c(4,1,2,3,5))], 1),cex=1,pos=3)
+text(bp, 0, round(successful_busTechPerks_sentiment_counts[order(successful_busTechPerks_sentiment_counts, c(4,1,2,3,5))], 1),cex=1,pos=3)
+
+
+successful_busTechPerks_comment_score$campid = successful_busTechPerks_comments$campid
+successful_busTechPerks_comment_score$commentdate = successful_busTechPerks_comments$commentdate
+
+time = read.csv("dateData.txt", sep=",")
+colnames(time) = c("timestamp", "date")
+
+successful_busTechPerks_comment_score = sqldf("select * from successful_busTechPerks_comment_score inner join time
+        on time.timestamp = successful_busTechPerks_comment_score.commentdate")
+successful_busTechPerks_comment_score = successful_busTechPerks_comment_score[-6]
+successful_busTechPerks_comment_score$standardDate = lapply(successful_busTechPerks_comment_score$date, function(date) {
+    result = as.POSIXct(date, format = "%d %B %Y at %H:%M:%S")
+})
 
 
 ########### TDM ##########
