@@ -25,7 +25,6 @@ createTDM = function(corpus, .progress='none') {
     return(TDM)
 }
 
-
 # #Each of these words occurred more that 2000 times.
 # findFreqTerms(TDM, 5000)
 # 

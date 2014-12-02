@@ -46,6 +46,7 @@ ggplot(temp, aes(x = Docs, y = Terms, fill = count)) +
     theme(panel.background = element_blank()) +
     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
 
+### For perk titles
 busTechPerks_TDM = createTDM(busTechPerks$perk_titl, "text")
 findFreqTerms(busTechPerks_TDM, lowfreq = 1000)
 
@@ -82,6 +83,11 @@ numTerms = dim(TDM.common)[1]
 inspect(TDM.common[1:numTerms, 1:10])
 
 TDM.common = as.matrix(TDM.common)
+
+# Cluster Dendogram of Successful BusTechWords Perk Descriptions
+plot(hclust(dist(TDM.common)), xlab="Words" , main = "Cluster Dendogram for Successful BusTech Perk Descriptions")
+
+
 TDM.common = melt(TDM.common, value.name = "count")
 temp = TDM.common[1:10000,]
 
@@ -98,7 +104,11 @@ ggplot(temp, aes(x = Docs, y = Terms, fill = count)) +
     theme(panel.background = element_blank()) +
     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
 
+# Create a word cloud for busTechPerk descriptions
+createWordCloud(successful_busTechPerks$perk_descr, "text")
 
+
+### For busTechPerk perk titles
 successful_busTechPerks_TDM = createTDM(successful_busTechPerks$perk_titl, "text")
 #Words that are in at least 2000 documents (descriptions)
 findFreqTerms(successful_busTechPerks_TDM, lowfreq = 100)
@@ -108,6 +118,10 @@ numTerms = dim(TDM.common)[1]
 inspect(TDM.common[1:numTerms, 1:10])
 
 TDM.common = as.matrix(TDM.common)
+
+# Cluster Dendogram of Successful BusTechWords Perk Titles
+plot(hclust(dist(TDM.common)), xlab="Words", main = "Cluster Dendogram for Successful BusTech Perk Titles")
+
 TDM.common = melt(TDM.common, value.name = "count")
 temp = TDM.common[1:21000,]
 
@@ -124,7 +138,8 @@ ggplot(temp, aes(x = Docs, y = Terms, fill = count)) +
     theme(panel.background = element_blank()) +
     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
 
-
+#Create word cloud for successful busTechPerks titles
+createWordCloud(successful_busTechPerks$perk_titl, "text")
 
 ####################### For the unsuccessful campaigns #######################################
 unsuccessful_busTechPerks = busTechPerks[which(busTechPerks$successful != 1),]
@@ -138,6 +153,10 @@ numTerms = dim(TDM.common)[1]
 inspect(TDM.common[1:numTerms, 1:10])
 
 TDM.common = as.matrix(TDM.common)
+
+# Cluster Dendogram for Unsuccessful BusTechPerk Titles
+plot(hclust(dist(TDM.common)), xlab="Words", main = "Cluster Dendogram for Unsuccessful BusTech Perk Descriptions")
+
 TDM.common = melt(TDM.common, value.name = "count")
 temp = TDM.common[1:19000,]
 
@@ -154,6 +173,8 @@ ggplot(temp, aes(x = Docs, y = Terms, fill = count)) +
     theme(panel.background = element_blank()) +
     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
 
+# Word cloud for unsucessful campaign perk descriptions
+createWordCloud(unsuccessful_busTechPerks$perk_descr, "text")
 
 unsuccessful_busTechPerks_TDM = createTDM(unsuccessful_busTechPerks$perk_titl, "text")
 #Words that are in at least 1000 documents (descriptions)
@@ -164,6 +185,10 @@ numTerms = dim(TDM.common)[1]
 inspect(TDM.common[1:numTerms, 1:10])
 
 TDM.common = as.matrix(TDM.common)
+
+#Cluster Dendogram for Unsuccessful BusTech Perk Titles
+plot(hclust(dist(TDM.common)), xlab="Words", main = "Cluster Dendogram for Unsuccessful BusTech Perk Titles")
+
 TDM.common = melt(TDM.common, value.name = "count")
 temp = TDM.common[1:24000,]
 
@@ -180,7 +205,8 @@ ggplot(temp, aes(x = Docs, y = Terms, fill = count)) +
     theme(panel.background = element_blank()) +
     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
 
-
+# Word cloud for unsucessful campaign perk titles
+createWordCloud(unsuccessful_busTechPerks$perk_descr, "text")
 
 ####################### Comments of successful busTechPerks ##################################
 successful_busTechPerks = busTechPerks[which(busTechPerks$successful == 1),]
@@ -219,6 +245,9 @@ a = table(sort(successful_busTechPerks_comment_score$date), successful_busTechPe
 #Ideally will try to take care of sorting but it is a pain in R
 a
 plot(a, las=2, col = "blue", main = "Sentiment Over Time for Successful Campaigns" , ylab="Sentiment",xlab = "Date")
+
+# Word cloud for comments left on successful campaigns
+createWordCloud(successful_busTechPerks_comments$comment, "text")
 
 ########### TDM ##########
 
@@ -285,6 +314,8 @@ a = table(sort(unsuccessful_busTechPerks_comment_score$date), unsuccessful_busTe
 a
 plot(a, las=2, col = "red", main = "Sentiment over time for Unsuccessful Campaigns" , ylab="Sentiment",xlab = "Date")
 
+# Word cloud for comments left on unsuccessful campaigns
+createWordCloud(unsuccessful_busTechPerks_comments$comment, "text")
 
 ########### TDM ##########
 
@@ -370,20 +401,10 @@ doc_summary <- analytics@document_summary
 
 rm(bustechPerks)
 
-#Sort posts by perk_id
 #Do a rudimentay graph of the various clusters. See which is the most/least frequent perk_id
-#Assume that perk_id is coded from basic(low) to complex(high)
-#Identify the outliers
-
-#Sort posts by prices
-#Compare to perk_id. Would expect higher prices to correspond to a higher perk_id
-
 
 #Use cosine similarity (Levenshtein library in python)
-#Calculate a sentiment score for each comment.
-#Look up NLP libraries for R, or change to python
-#Iterate through comments calculating the sentiment for each
-#Sort again by sentiment scores. See which perk_id or price gets the highest score
+
 #Can hopefully identify the ones that are the most highly favored
 
 #Do a word frequency count on the perk descriptions. Expect the word "free" to be the most common
