@@ -83,7 +83,6 @@ numTerms = dim(TDM.common)[1]
 inspect(TDM.common[1:numTerms, 1:10])
 
 TDM.common = as.matrix(TDM.common)
-
 # Cluster Dendogram of Successful BusTechWords Perk Descriptions
 plot(hclust(dist(TDM.common)), xlab="Words" , main = "Cluster Dendogram for Successful BusTech Perk Descriptions")
 
@@ -374,6 +373,52 @@ doc_matrix = create_matrix(subset_busTechPerks$perk_descr, language="english", r
 end.time = Sys.time()
 time.taken = end.time - start.time
 time.taken
+
+
+#Plotting k means clustering 
+require(cluster)
+kmeans3 <- kmeans(doc_matrix, 3)
+
+#Merge cluster assignment back to keywords
+kw_with_cluster <- as.data.frame(cbind(subset_busTechPerks$perk_descr, subset_busTechPerks$campid, kmeans5$cluster))
+names(kw_with_cluster) <- c("keyword", "campid", "kmeans5")
+
+#Make df for each cluster result, quickly "eyeball" results
+cluster1 <- subset(kw_with_cluster, subset=kmeans5 == 1)
+cluster2 <- subset(kw_with_cluster, subset=kmeans5 == 2)
+cluster3 <- subset(kw_with_cluster, subset=kmeans5 == 3)
+
+plot(kw_with_cluster, col = kmeans5$cluster)
+
+
+# Instead of randomly choosing k, we test to see which is the best
+
+#accumulator for cost results
+cost_df <- data.frame()
+
+#run kmeans for all clusters up to 100
+for(i in 1:100){
+    #Run kmeans for each level of i, allowing up to 100 iterations for convergence
+    kmeans<- kmeans(x=doc_matrix, centers=i, iter.max=100)
+    
+    #Combine cluster number and cost together, write to df
+    cost_df<- rbind(cost_df, cbind(i, kmeans$tot.withinss))
+    
+}
+names(cost_df) <- c("cluster", "cost")
+
+#Cost plot
+ggplot(data=cost_df, aes(x=cluster, y=cost, group=1)) + 
+    theme_bw(base_family="Garamond") + 
+    geom_line(colour = "darkgreen") +
+    theme(text = element_text(size=20)) +
+    ggtitle("Reduction In Cost For Values of 'k'\n") +
+    xlab("\nClusters") + 
+    ylab("Within-Cluster Sum of Squares\n") +
+    scale_x_continuous(breaks=seq(from=0, to=100, by= 10)) +
+    geom_line(aes(y= fitted), linetype=2)
+
+
 
 #state what is training set and what is test
 trainingsize = 0.8*nrow(subset_busTechPerks)
