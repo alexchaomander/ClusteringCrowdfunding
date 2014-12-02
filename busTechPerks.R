@@ -183,7 +183,7 @@ ggplot(temp, aes(x = Docs, y = Terms, fill = count)) +
 
 
 ####################### Comments of successful busTechPerks ##################################
-
+successful_busTechPerks = busTechPerks[which(busTechPerks$successful == 1),]
 successful_busTechPerks_comments = sqldf("select * from comments inner join 
                                          (select campid from successful_busTechPerks) as a
                                          on comments.campid = a.campid")
@@ -212,9 +212,13 @@ successful_busTechPerks_comment_score = sqldf("select * from successful_busTechP
         on time.timestamp = successful_busTechPerks_comment_score.commentdate")
 successful_busTechPerks_comment_score = successful_busTechPerks_comment_score[-6]
 successful_busTechPerks_comment_score$standardDate = lapply(successful_busTechPerks_comment_score$date, function(date) {
-    result = as.POSIXct(date, format = "%d %B %Y at %H:%M:%S")
+    result = as.Date(date, format = "%d %B %Y")
 })
 
+a = table(sort(successful_busTechPerks_comment_score$date), successful_busTechPerks_comment_score$sentiment)
+#Ideally will try to take care of sorting but it is a pain in R
+a
+plot(a, las=2, col = "blue", main = "Sentiment Over Time for Successful Campaigns" , ylab="Sentiment",xlab = "Date")
 
 ########### TDM ##########
 
@@ -245,6 +249,7 @@ ggplot(temp, aes(x = Docs, y = Terms, fill = count)) +
 
 
 ####################### Comments of unsuccessful busTechPerks ##################################
+unsuccessful_busTechPerks = busTechPerks[which(busTechPerks$successful != 1),]
 unsuccessful_busTechPerks_comments = sqldf("select * from comments inner join 
                                            (select campid from unsuccessful_busTechPerks) as a
                                            on comments.campid = a.campid")
@@ -258,9 +263,27 @@ unsuccessful_busTechPerks_sentiment_counts = table(unsuccessful_busTechPerks_com
 
 bp = barplot(unsuccessful_busTechPerks_sentiment_counts[order(unsuccessful_busTechPerks_sentiment_counts, c(4,1,2,3,5))]
              ,xlab = "sentiment", ylab = "frequency", main = "Frequency of Sentiment Scores for Unsuccessful BusTechPerks",
-             col = "blue", ylim = c(0, 25000),
+             col = "red", ylim = c(0, 25000),
              args.legend = list(title = "Sentiment Score", x = "topleft", cex = .7))
 text(bp, 0, round(unsuccessful_busTechPerks_sentiment_counts[order(unsuccessful_busTechPerks_sentiment_counts, c(4,1,2,3,5))], 1),cex=1,pos=3)
+
+unsuccessful_busTechPerks_comment_score$campid = unsuccessful_busTechPerks_comments$campid
+unsuccessful_busTechPerks_comment_score$commentdate = unsuccessful_busTechPerks_comments$commentdate
+
+time = read.csv("dateData.txt", sep=",")
+colnames(time) = c("timestamp", "date")
+
+unsuccessful_busTechPerks_comment_score = sqldf("select * from unsuccessful_busTechPerks_comment_score inner join time
+                                              on time.timestamp = unsuccessful_busTechPerks_comment_score.commentdate")
+unsuccessful_busTechPerks_comment_score = unsuccessful_busTechPerks_comment_score[-6]
+unsuccessful_busTechPerks_comment_score$standardDate = lapply(unsuccessful_busTechPerks_comment_score$date, function(date) {
+    result = as.Date(date, format = "%d %B %Y")
+})
+
+a = table(sort(unsuccessful_busTechPerks_comment_score$date), unsuccessful_busTechPerks_comment_score$sentiment)
+#Ideally will try to take care of sorting but it is a pain in R
+a
+plot(a, las=2, col = "red", main = "Sentiment over time for Unsuccessful Campaigns" , ylab="Sentiment",xlab = "Date")
 
 
 ########### TDM ##########
@@ -290,9 +313,7 @@ ggplot(temp, aes(x = Docs, y = Terms, fill = count)) +
     theme(panel.background = element_blank()) +
     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
 
-
-#######################################################################################
-
+#################################### CLASSIFICATION ##########################################
 
 #Percentage of successful business
 nrow(successful_busTechPerks)/(nrow(unsuccessful_busTechPerks) + nrow(successful_busTechPerks))
