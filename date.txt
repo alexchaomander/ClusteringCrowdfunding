@@ -1,0 +1,82 @@
+said 1 day ago,2014-11
+said 2 days ago,2014-11
+said 3 days ago,2014-11
+said 4 days ago,2014-11
+said 5 days ago,2014-11
+said 6 days ago,2014-11
+said 7 days ago,2014-11
+said 8 days ago,2014-11
+said 9 days ago,2014-11
+said 10 days ago,2014-11
+said 11 days ago,2014-11
+said 12 days ago,2014-11
+said 13 days ago,2014-11
+said 14 days ago,2014-11
+said 15 days ago,2014-11
+said 16 days ago,2014-11
+said 17 days ago,2014-11
+said 18 days ago,2014-11
+said 19 days ago,2014-11
+said 20 days ago,2014-11
+said 21 days ago,2014-11
+said 22 days ago,2014-11
+said 23 days ago,2014-11
+said 24 days ago,2014-11
+said 25 days ago,2014-11
+said 26 days ago,2014-11
+said 27 days ago,2014-11
+said 28 days ago,2014-11
+said 29 days ago,2014-11
+said 30 days ago,2014-11
+said 31 days ago,2014-10
+said 1 hour ago,2014-12
+said 2 hours ago,2014-12
+said 3 hours ago,2014-12
+said 4 hours ago,2014-12
+said 5 hours ago,2014-12
+said 6 hours ago,2014-12
+said 7 hours ago,2014-12
+said 8 hours ago,2014-12
+said 9 hours ago,2014-12
+said 10 hours ago,2014-12
+said 11 hours ago,2014-12
+said 12 hours ago,2014-12
+said 13 hours ago,2014-12
+said 14 hours ago,2014-12
+said 15 hours ago,2014-12
+said 16 hours ago,2014-12
+said 17 hours ago,2014-12
+said 18 hours ago,2014-12
+said 19 hours ago,2014-12
+said 20 hours ago,2014-12
+said 21 hours ago,2014-12
+said 22 hours ago,2014-12
+said 23 hours ago,2014-12
+said 24 hours ago,2014-12
+said 1 month ago,2014-11
+said 2 months ago,2014-10
+said 3 months ago,2014-9
+said 4 months ago,2014-8
+said 5 months ago,2014-7
+said 6 months ago,2014-6
+said 7 months ago,2014-5
+said 8 months ago,2014-4
+said 9 months ago,2014-3
+said 10 months ago,2014-2
+said 11 months ago,2014-1
+said 12 months ago,2013-12
+said 1 year ago,2013-1
+said 2 years ago,2012-1
+said 3 years ago,2011-1
+said 4 years ago,2010-1
+said 5 years ago,2009-1
+said almost 1 years ago,2014-2
+said almost 2 years ago,2013-2
+said almost 3 years ago,2012-2
+said almost 4 years ago,2011-2
+said almost 5 years ago,2010-2
+said over 1 year ago,2013-10
+said over 2 years ago,2012-10
+said over 3 years ago,2011-10
+said over 4 year ago,2010-10
+said over 5 years ago,2009-10

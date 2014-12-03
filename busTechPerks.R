@@ -4,6 +4,7 @@ require(sqldf)
 require("RTextTools")
 source("sentiment.R")
 source("createTDM.R")
+source("createWordCloud.R")
 
 ####################### For 'bustechPerks' dataset ###################################
 busTechPerks = read.csv("data/bus_tech_perks_full.txt", sep = "\t")
@@ -42,7 +43,7 @@ ggplot(temp, aes(x = Docs, y = Terms, fill = count)) +
     scale_fill_gradient(high="#FF0000" , low="#FFFFFF") +
     ylab("") +
     xlab("Campaigns") +
-    ggtitle("Word Frequency Matrix For Campaign Descriptions") + 
+    ggtitle("Word Frequency Matrix For BusTech Campaign Descriptions") + 
     theme(panel.background = element_blank()) +
     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
 
@@ -65,7 +66,7 @@ ggplot(temp, aes(x = Docs, y = Terms, fill = count)) +
     scale_fill_gradient(high="#FF0000" , low="#FFFFFF") +
     ylab("") +
     xlab("Campaigns") +
-    ggtitle("Word Frequency Matrix For Campaign Titles") + 
+    ggtitle("Word Frequency Matrix For BusTech Campaign Titles") + 
     theme(panel.background = element_blank()) +
     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
 
@@ -220,11 +221,11 @@ successful_busTechPerks_comment_score =
 
 successful_busTechPerks_sentiment_counts = table(successful_busTechPerks_comment_score$sentiment)
 
-bp = barplot(successful_busTechPerks_sentiment_counts[order(successful_busTechPerks_sentiment_counts, c(4,1,2,3,5))]
+bp = barplot(successful_busTechPerks_sentiment_counts[c(4,1,2,3,5)]
              ,xlab = "sentiment", ylab = "frequency", main = "Frequency of Sentiment Scores for Successful BusTechPerks",
              col = "blue", ylim = c(0, 25000),
              args.legend = list(title = "Sentiment Score", x = "topleft", cex = .7))
-text(bp, 0, round(successful_busTechPerks_sentiment_counts[order(successful_busTechPerks_sentiment_counts, c(4,1,2,3,5))], 1),cex=1,pos=3)
+text(bp, 0, round(successful_busTechPerks_sentiment_counts[c(4,1,2,3,5)], 1),cex=1,pos=3)
 
 
 successful_busTechPerks_comment_score$campid = successful_busTechPerks_comments$campid
@@ -289,11 +290,11 @@ unsuccessful_busTechPerks_comment_score =
 
 unsuccessful_busTechPerks_sentiment_counts = table(unsuccessful_busTechPerks_comment_score$sentiment)
 
-bp = barplot(unsuccessful_busTechPerks_sentiment_counts[order(unsuccessful_busTechPerks_sentiment_counts, c(4,1,2,3,5))]
+bp = barplot(unsuccessful_busTechPerks_sentiment_counts[c(4,1,2,3,5)]
              ,xlab = "sentiment", ylab = "frequency", main = "Frequency of Sentiment Scores for Unsuccessful BusTechPerks",
              col = "red", ylim = c(0, 25000),
              args.legend = list(title = "Sentiment Score", x = "topleft", cex = .7))
-text(bp, 0, round(unsuccessful_busTechPerks_sentiment_counts[order(unsuccessful_busTechPerks_sentiment_counts, c(4,1,2,3,5))], 1),cex=1,pos=3)
+text(bp, 0, round(unsuccessful_busTechPerks_sentiment_counts[c(4,1,2,3,5)], 1),cex=1,pos=3)
 
 unsuccessful_busTechPerks_comment_score$campid = unsuccessful_busTechPerks_comments$campid
 unsuccessful_busTechPerks_comment_score$commentdate = unsuccessful_busTechPerks_comments$commentdate
@@ -368,25 +369,23 @@ subset_busTechPerks = subset_busTechPerks[,c(-7,-8)]
 
 
 # CREATE THE DOCUMENT-TERM MATRIX FOR CLASSIFICATION
-start.time = Sys.time()
 doc_matrix = create_matrix(subset_busTechPerks$perk_descr, language="english", removeNumbers=TRUE, stemWords=TRUE, removeSparseTerms=0.999)
-end.time = Sys.time()
-time.taken = end.time - start.time
-time.taken
-
 
 #Plotting k means clustering 
 require(cluster)
-kmeans3 <- kmeans(doc_matrix, 3)
+kmeans5 <- kmeans(doc_matrix, 5)
 
 #Merge cluster assignment back to keywords
-kw_with_cluster <- as.data.frame(cbind(subset_busTechPerks$perk_descr, subset_busTechPerks$campid, kmeans5$cluster))
-names(kw_with_cluster) <- c("keyword", "campid", "kmeans5")
+kw_with_cluster <- as.data.frame(cbind(subset_busTechPerks$perk_descr,
+                                       subset_busTechPerks$price, subset_busTechPerks$differential, kmeans5$cluster))
+names(kw_with_cluster) <- c("keyword", "price", "differential", "kmeans5")
 
 #Make df for each cluster result, quickly "eyeball" results
 cluster1 <- subset(kw_with_cluster, subset=kmeans5 == 1)
 cluster2 <- subset(kw_with_cluster, subset=kmeans5 == 2)
 cluster3 <- subset(kw_with_cluster, subset=kmeans5 == 3)
+cluster4 <- subset(kw_with_cluster, subset=kmeans5 == 4)
+cluster5 <- subset(kw_with_cluster, subset=kmeans5 == 5)
 
 plot(kw_with_cluster, col = kmeans5$cluster)
 
@@ -415,10 +414,7 @@ ggplot(data=cost_df, aes(x=cluster, y=cost, group=1)) +
     ggtitle("Reduction In Cost For Values of 'k'\n") +
     xlab("\nClusters") + 
     ylab("Within-Cluster Sum of Squares\n") +
-    scale_x_continuous(breaks=seq(from=0, to=100, by= 10)) +
-    geom_line(aes(y= fitted), linetype=2)
-
-
+    scale_x_continuous(breaks=seq(from=0, to=100, by= 10))
 
 #state what is training set and what is test
 trainingsize = 0.8*nrow(subset_busTechPerks)
@@ -443,14 +439,3 @@ topic_summary <- analytics@label_summary
 alg_summary <- analytics@algorithm_summary
 ens_summary <-analytics@ensemble_summary
 doc_summary <- analytics@document_summary
-
-rm(bustechPerks)
-
-#Do a rudimentay graph of the various clusters. See which is the most/least frequent perk_id
-
-#Use cosine similarity (Levenshtein library in python)
-
-#Can hopefully identify the ones that are the most highly favored
-
-#Do a word frequency count on the perk descriptions. Expect the word "free" to be the most common
-#but what will be the next 10 most common words?
