@@ -7,10 +7,11 @@ source("createTDM.R")
 source("createWordCloud.R")
 
 ####################### For 'nonPerks' dataset ###################################
+
+### NOTE this dataset has a lot more NA values in it so it slows down the processing / some will not work 
 nonPerks = read.csv("data/nonTech nonBus nonCommunity perks.txt", sep="\t")
 success = read.csv("data/campaign_success.txt", sep = "\t")
 comments = read.csv("data/campaign_comments.txt", sep="\t")
-
 
 nonPerks = sqldf("select * from nonPerks inner join success on nonPerks.campid = success.campid")
 nonPerks$perks_claimed = as.numeric(paste(nonPerks$perks_claimed))
@@ -89,7 +90,7 @@ successful_nonPerks_sentiment_counts = table(successful_nonPerks_comment_score$s
 
 bp = barplot(successful_nonPerks_sentiment_counts[c(4,1,2,3,5)]
              ,xlab = "sentiment", ylab = "frequency", main = "Frequency of Sentiment Scores for Successful nonPerks",
-             col = "blue", ylim = c(0, 25000),
+             col = "blue", ylim = c(0, 150000),
              args.legend = list(title = "Sentiment Score", x = "topleft", cex = .7))
 text(bp, 0, round(successful_nonPerks_sentiment_counts[c(4,1,2,3,5)], 1),cex=1,pos=3)
 
@@ -97,7 +98,7 @@ text(bp, 0, round(successful_nonPerks_sentiment_counts[c(4,1,2,3,5)], 1),cex=1,p
 successful_nonPerks_comment_score$campid = successful_nonPerks_comments$campid
 successful_nonPerks_comment_score$commentdate = successful_nonPerks_comments$commentdate
 
-time = read.csv("dateData.txt", sep=",")
+time = read.csv("date.txt", sep=",")
 colnames(time) = c("timestamp", "date")
 
 successful_nonPerks_comment_score = sqldf("select * from successful_nonPerks_comment_score inner join time
@@ -107,7 +108,7 @@ successful_nonPerks_comment_score$standardDate = lapply(successful_nonPerks_comm
     result = as.Date(date, format = "%d %B %Y")
 })
 
-a = table(sort(successful_nonPerks_comment_score$date), successful_nonPerks_comment_score$sentiment)
+a = table(sort(successful_nonPerks_comment_score$sentiment), successful_nonPerks_comment_score$date)
 #Ideally will try to take care of sorting but it is a pain in R
 a
 plot(a, las=2, col = "blue", main = "Sentiment Over Time for Successful Campaigns" , ylab="Sentiment",xlab = "Date")
@@ -157,14 +158,14 @@ unsuccessful_nonPerks_sentiment_counts = table(unsuccessful_nonPerks_comment_sco
 
 bp = barplot(unsuccessful_nonPerks_sentiment_counts[c(4,1,2,3,5)]
              ,xlab = "sentiment", ylab = "frequency", main = "Frequency of Sentiment Scores for Unsuccessful nonPerks",
-             col = "red", ylim = c(0, 25000),
+             col = "red", ylim = c(0, 200000),
              args.legend = list(title = "Sentiment Score", x = "topleft", cex = .7))
 text(bp, 0, round(unsuccessful_nonPerks_sentiment_counts[c(4,1,2,3,5)], 1),cex=1,pos=3)
 
 unsuccessful_nonPerks_comment_score$campid = unsuccessful_nonPerks_comments$campid
 unsuccessful_nonPerks_comment_score$commentdate = unsuccessful_nonPerks_comments$commentdate
 
-time = read.csv("dateData.txt", sep=",")
+time = read.csv("date.txt", sep=",")
 colnames(time) = c("timestamp", "date")
 
 unsuccessful_nonPerks_comment_score = sqldf("select * from unsuccessful_nonPerks_comment_score inner join time
@@ -174,7 +175,7 @@ unsuccessful_nonPerks_comment_score$standardDate = lapply(unsuccessful_nonPerks_
     result = as.Date(date, format = "%d %B %Y")
 })
 
-a = table(sort(unsuccessful_nonPerks_comment_score$date), unsuccessful_nonPerks_comment_score$sentiment)
+a = table(unsuccessful_nonPerks_comment_score$sentiment, sort(unsuccessful_nonPerks_comment_score$date))
 #Ideally will try to take care of sorting but it is a pain in R
 a
 plot(a, las=2, col = "red", main = "Sentiment over time for Unsuccessful Campaigns" , ylab="Sentiment",xlab = "Date")
@@ -238,21 +239,20 @@ doc_matrix = create_matrix(subset_nonPerks$perk_descr, language="english", remov
 
 #Plotting k means clustering 
 require(cluster)
-kmeans5 <- kmeans(doc_matrix, 5)
+kmeans4 <- kmeans(doc_matrix, 4)
 
 #Merge cluster assignment back to keywords
 kw_with_cluster <- as.data.frame(cbind(subset_nonPerks$perk_descr,
-                                       subset_nonPerks$price, subset_nonPerks$differential, kmeans5$cluster))
-names(kw_with_cluster) <- c("keyword", "price", "differential", "kmeans5")
+                                       subset_nonPerks$price, subset_nonPerks$differential, kmeans4$cluster))
+names(kw_with_cluster) <- c("keyword", "price", "differential", "kmeans4")
 
 #Make df for each cluster result, quickly "eyeball" results
-cluster1 <- subset(kw_with_cluster, subset=kmeans5 == 1)
-cluster2 <- subset(kw_with_cluster, subset=kmeans5 == 2)
-cluster3 <- subset(kw_with_cluster, subset=kmeans5 == 3)
-cluster4 <- subset(kw_with_cluster, subset=kmeans5 == 4)
-cluster5 <- subset(kw_with_cluster, subset=kmeans5 == 5)
+cluster1 <- subset(kw_with_cluster, subset=kmeans4 == 1)
+cluster2 <- subset(kw_with_cluster, subset=kmeans4 == 2)
+cluster3 <- subset(kw_with_cluster, subset=kmeans4 == 3)
+cluster4 <- subset(kw_with_cluster, subset=kmeans4 == 4)
 
-plot(kw_with_cluster, col = kmeans5$cluster)
+plot(kw_with_cluster, col = kmeans4$cluster)
 
 
 # Instead of randomly choosing k, we test to see which is the best
