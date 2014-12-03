@@ -12,7 +12,6 @@ smallPerks = read.csv("data/Tech and Small Business perks.txt", sep="\t")
 success = read.csv("data/campaign_success.txt", sep = "\t")
 comments = read.csv("data/campaign_comments.txt", sep="\t")
 
-
 #Apply same techniques to study that. Appears to have more missing data
 
 smallPerks = sqldf("select * from smallPerks inner join success on smallPerks.campid = success.campid")
@@ -32,12 +31,12 @@ smallPerks_TDM = createTDM(smallPerks$perk_descr, "text")
 findFreqTerms(smallPerks_TDM, lowfreq = 2000)
 findFreqTerms(smallPerks_TDM, lowfreq = 5000)
 
-TDM.common = removeSparseTerms(smallPerks_TDM, sparse = 0.90)
+TDM.common = removeSparseTerms(smallPerks_TDM, sparse = 0.95)
 inspect(TDM.common[1:dim(TDM.common)[1], 1:10])
 
 TDM.common = as.matrix(TDM.common)
 TDM.common = melt(TDM.common, value.name = "count")
-temp = TDM.common[1:11000,]
+temp = TDM.common[1:9000,]
 
 table(TDM.common$Terms, TDM.common$count)
 
@@ -93,7 +92,7 @@ plot(hclust(dist(TDM.common)), xlab="Words" , main = "Cluster Dendogram for Succ
 
 
 TDM.common = melt(TDM.common, value.name = "count")
-temp = TDM.common[1:10000,]
+temp = TDM.common[1:5000,]
 
 table(TDM.common$Terms, TDM.common$count)
 
@@ -127,7 +126,7 @@ TDM.common = as.matrix(TDM.common)
 plot(hclust(dist(TDM.common)), xlab="Words", main = "Cluster Dendogram for Successful smallPerks Perk Titles")
 
 TDM.common = melt(TDM.common, value.name = "count")
-temp = TDM.common[1:21000,]
+temp = TDM.common[1:6300,]
 
 table(TDM.common$Terms, TDM.common$count)
 
@@ -163,7 +162,7 @@ TDM.common = as.matrix(TDM.common)
 plot(hclust(dist(TDM.common)), xlab="Words", main = "Cluster Dendogram for Unsuccessful smallPerks Perk Descriptions")
 
 TDM.common = melt(TDM.common, value.name = "count")
-temp = TDM.common[1:19000,]
+temp = TDM.common[1:3800,]
 
 table(TDM.common$Terms, TDM.common$count)
 
@@ -195,7 +194,7 @@ TDM.common = as.matrix(TDM.common)
 plot(hclust(dist(TDM.common)), xlab="Words", main = "Cluster Dendogram for Unsuccessful smallPerks Perk Titles")
 
 TDM.common = melt(TDM.common, value.name = "count")
-temp = TDM.common[1:24000,]
+temp = TDM.common[1:10000,]
 
 table(TDM.common$Terms, TDM.common$count)
 
@@ -206,12 +205,12 @@ ggplot(temp, aes(x = Docs, y = Terms, fill = count)) +
     scale_fill_gradient(high="#FF0000" , low="#FFFFFF") +
     ylab("") +
     xlab("Campaigns") +
-    ggtitle("Word Frequency Matrix For Successful Campaign Titles") + 
+    ggtitle("Word Frequency Matrix For Unsuccessful smallPerk Campaign Titles") + 
     theme(panel.background = element_blank()) +
     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
 
 # Word cloud for unsucessful campaign perk titles
-createWordCloud(unsuccessful_smallPerks$perk_descr, "text")
+createWordCloud(unsuccessful_smallPerks$perk_titl, "text")
 
 ####################### Comments of successful smallPerks ##################################
 
@@ -235,7 +234,7 @@ text(bp, 0, round(successful_smallPerks_sentiment_counts[c(4,1,2,3,5)], 1),cex=1
 successful_smallPerks_comment_score$campid = successful_smallPerks_comments$campid
 successful_smallPerks_comment_score$commentdate = successful_smallPerks_comments$commentdate
 
-time = read.csv("dateData.txt", sep=",")
+time = read.csv("date.txt", sep=",")
 colnames(time) = c("timestamp", "date")
 
 successful_smallPerks_comment_score = sqldf("select * from successful_smallPerks_comment_score inner join time
@@ -245,7 +244,7 @@ successful_smallPerks_comment_score$standardDate = lapply(successful_smallPerks_
     result = as.Date(date, format = "%d %B %Y")
 })
 
-a = table(sort(successful_smallPerks_comment_score$date), successful_smallPerks_comment_score$sentiment)
+a = table(successful_smallPerks_comment_score$sentiment, sort(successful_smallPerks_comment_score$date))
 #Ideally will try to take care of sorting but it is a pain in R
 a
 plot(a, las=2, col = "blue", main = "Sentiment Over Time for Successful Campaigns" , ylab="Sentiment",xlab = "Date")
@@ -265,7 +264,7 @@ inspect(TDM.common[1:numTerms, 1:10])
 
 TDM.common = as.matrix(TDM.common)
 TDM.common = melt(TDM.common, value.name = "count")
-temp = TDM.common[1:19000,]
+temp = TDM.common[1:5700,]
 
 table(TDM.common$Terms, TDM.common$count)
 
@@ -302,7 +301,7 @@ text(bp, 0, round(unsuccessful_smallPerks_sentiment_counts[c(4,1,2,3,5)], 1),cex
 unsuccessful_smallPerks_comment_score$campid = unsuccessful_smallPerks_comments$campid
 unsuccessful_smallPerks_comment_score$commentdate = unsuccessful_smallPerks_comments$commentdate
 
-time = read.csv("dateData.txt", sep=",")
+time = read.csv("date.txt", sep=",")
 colnames(time) = c("timestamp", "date")
 
 unsuccessful_smallPerks_comment_score = sqldf("select * from unsuccessful_smallPerks_comment_score inner join time
@@ -312,7 +311,7 @@ unsuccessful_smallPerks_comment_score$standardDate = lapply(unsuccessful_smallPe
     result = as.Date(date, format = "%d %B %Y")
 })
 
-a = table(sort(unsuccessful_smallPerks_comment_score$date), unsuccessful_smallPerks_comment_score$sentiment)
+a = table(unsuccessful_smallPerks_comment_score$sentiment, sort(unsuccessful_smallPerks_comment_score$date))
 #Ideally will try to take care of sorting but it is a pain in R
 a
 plot(a, las=2, col = "red", main = "Sentiment over time for Unsuccessful Campaigns" , ylab="Sentiment",xlab = "Date")
@@ -332,7 +331,7 @@ inspect(TDM.common[1:numTerms, 1:10])
 
 TDM.common = as.matrix(TDM.common)
 TDM.common = melt(TDM.common, value.name = "count")
-temp = TDM.common[1:20000,]
+temp = TDM.common[1:4000,]
 
 table(TDM.common$Terms, TDM.common$count)
 
@@ -377,22 +376,20 @@ doc_matrix = create_matrix(subset_smallPerks$perk_descr, language="english", rem
 
 #Plotting k means clustering 
 require(cluster)
-kmeans5 <- kmeans(doc_matrix, 5)
+kmeans4 <- kmeans(doc_matrix, 4)
 
 #Merge cluster assignment back to keywords
 kw_with_cluster <- as.data.frame(cbind(subset_smallPerks$perk_descr,
-                                       subset_smallPerks$price, subset_smallPerks$differential, kmeans5$cluster))
-names(kw_with_cluster) <- c("keyword", "price", "differential", "kmeans5")
+                                       subset_smallPerks$price, subset_smallPerks$differential, kmeans4$cluster))
+names(kw_with_cluster) <- c("keyword", "price", "differential", "kmeans4")
 
 #Make df for each cluster result, quickly "eyeball" results
-cluster1 <- subset(kw_with_cluster, subset=kmeans5 == 1)
-cluster2 <- subset(kw_with_cluster, subset=kmeans5 == 2)
-cluster3 <- subset(kw_with_cluster, subset=kmeans5 == 3)
-cluster4 <- subset(kw_with_cluster, subset=kmeans5 == 4)
-cluster5 <- subset(kw_with_cluster, subset=kmeans5 == 5)
+cluster1 <- subset(kw_with_cluster, subset=kmeans4 == 1)
+cluster2 <- subset(kw_with_cluster, subset=kmeans4 == 2)
+cluster3 <- subset(kw_with_cluster, subset=kmeans4 == 3)
+cluster4 <- subset(kw_with_cluster, subset=kmeans4 == 4)
 
-plot(kw_with_cluster, col = kmeans5$cluster)
-
+plot(kw_with_cluster, col = kmeans4$cluster)
 
 # Instead of randomly choosing k, we test to see which is the best
 
