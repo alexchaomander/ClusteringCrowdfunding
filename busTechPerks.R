@@ -27,12 +27,12 @@ busTechPerks_TDM = createTDM(busTechPerks$perk_descr, "text")
 findFreqTerms(busTechPerks_TDM, lowfreq = 2000)
 findFreqTerms(busTechPerks_TDM, lowfreq = 5000)
 
-TDM.common = removeSparseTerms(busTechPerks_TDM, sparse = 0.90)
+TDM.common = removeSparseTerms(busTechPerks_TDM, sparse = 0.92)
 inspect(TDM.common[1:dim(TDM.common)[1], 1:10])
 
 TDM.common = as.matrix(TDM.common)
 TDM.common = melt(TDM.common, value.name = "count")
-temp = TDM.common[1:11000,]
+temp = TDM.common[1:9000,]
 
 table(TDM.common$Terms, TDM.common$count)
 
@@ -51,7 +51,7 @@ ggplot(temp, aes(x = Docs, y = Terms, fill = count)) +
 busTechPerks_TDM = createTDM(busTechPerks$perk_titl, "text")
 findFreqTerms(busTechPerks_TDM, lowfreq = 1000)
 
-TDM.common = removeSparseTerms(busTechPerks_TDM, sparse = 0.98)
+TDM.common = removeSparseTerms(busTechPerks_TDM, sparse = 0.99)
 inspect(TDM.common[1:dim(TDM.common)[1], 1:10])
 
 TDM.common = as.matrix(TDM.common)
@@ -59,7 +59,7 @@ TDM.common = melt(TDM.common, value.name = "count")
 
 table(TDM.common$Terms, TDM.common$count)
 
-temp = TDM.common[1:6000,]
+temp = TDM.common[1:10000,]
 
 ggplot(temp, aes(x = Docs, y = Terms, fill = count)) +
     geom_tile(color = "white") +
@@ -123,7 +123,7 @@ TDM.common = as.matrix(TDM.common)
 plot(hclust(dist(TDM.common)), xlab="Words", main = "Cluster Dendogram for Successful BusTech Perk Titles")
 
 TDM.common = melt(TDM.common, value.name = "count")
-temp = TDM.common[1:21000,]
+temp = TDM.common[1:14000,]
 
 table(TDM.common$Terms, TDM.common$count)
 
@@ -176,6 +176,7 @@ ggplot(temp, aes(x = Docs, y = Terms, fill = count)) +
 # Word cloud for unsucessful campaign perk descriptions
 createWordCloud(unsuccessful_busTechPerks$perk_descr, "text")
 
+### Perk titles
 unsuccessful_busTechPerks_TDM = createTDM(unsuccessful_busTechPerks$perk_titl, "text")
 #Words that are in at least 1000 documents (descriptions)
 findFreqTerms(unsuccessful_busTechPerks_TDM, lowfreq = 1000)
@@ -190,7 +191,7 @@ TDM.common = as.matrix(TDM.common)
 plot(hclust(dist(TDM.common)), xlab="Words", main = "Cluster Dendogram for Unsuccessful BusTech Perk Titles")
 
 TDM.common = melt(TDM.common, value.name = "count")
-temp = TDM.common[1:24000,]
+temp = TDM.common[1:12000,]
 
 table(TDM.common$Terms, TDM.common$count)
 
@@ -201,12 +202,12 @@ ggplot(temp, aes(x = Docs, y = Terms, fill = count)) +
     scale_fill_gradient(high="#FF0000" , low="#FFFFFF") +
     ylab("") +
     xlab("Campaigns") +
-    ggtitle("Word Frequency Matrix For Successful Campaign Titles") + 
+    ggtitle("Word Frequency Matrix For Unsuccessful Campaign Titles") + 
     theme(panel.background = element_blank()) +
     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
 
 # Word cloud for unsucessful campaign perk titles
-createWordCloud(unsuccessful_busTechPerks$perk_descr, "text")
+createWordCloud(unsuccessful_busTechPerks$perk_titl, "text")
 
 ####################### Comments of successful busTechPerks ##################################
 successful_busTechPerks = busTechPerks[which(busTechPerks$successful == 1),]
@@ -231,7 +232,7 @@ text(bp, 0, round(successful_busTechPerks_sentiment_counts[c(4,1,2,3,5)], 1),cex
 successful_busTechPerks_comment_score$campid = successful_busTechPerks_comments$campid
 successful_busTechPerks_comment_score$commentdate = successful_busTechPerks_comments$commentdate
 
-time = read.csv("dateData.txt", sep=",")
+time = read.csv("date.txt", sep=",")
 colnames(time) = c("timestamp", "date")
 
 successful_busTechPerks_comment_score = sqldf("select * from successful_busTechPerks_comment_score inner join time
@@ -241,7 +242,7 @@ successful_busTechPerks_comment_score$standardDate = lapply(successful_busTechPe
     result = as.Date(date, format = "%d %B %Y")
 })
 
-a = table(sort(successful_busTechPerks_comment_score$date), successful_busTechPerks_comment_score$sentiment)
+a = table(successful_busTechPerks_comment_score$sentiment, sort(successful_busTechPerks_comment_score$date))
 #Ideally will try to take care of sorting but it is a pain in R
 a
 plot(a, las=2, col = "blue", main = "Sentiment Over Time for Successful Campaigns" , ylab="Sentiment",xlab = "Date")
@@ -261,7 +262,7 @@ inspect(TDM.common[1:numTerms, 1:10])
 
 TDM.common = as.matrix(TDM.common)
 TDM.common = melt(TDM.common, value.name = "count")
-temp = TDM.common[1:19000,]
+temp = TDM.common[1:9500,]
 
 table(TDM.common$Terms, TDM.common$count)
 
@@ -299,7 +300,7 @@ text(bp, 0, round(unsuccessful_busTechPerks_sentiment_counts[c(4,1,2,3,5)], 1),c
 unsuccessful_busTechPerks_comment_score$campid = unsuccessful_busTechPerks_comments$campid
 unsuccessful_busTechPerks_comment_score$commentdate = unsuccessful_busTechPerks_comments$commentdate
 
-time = read.csv("dateData.txt", sep=",")
+time = read.csv("date.txt", sep=",")
 colnames(time) = c("timestamp", "date")
 
 unsuccessful_busTechPerks_comment_score = sqldf("select * from unsuccessful_busTechPerks_comment_score inner join time
@@ -309,7 +310,7 @@ unsuccessful_busTechPerks_comment_score$standardDate = lapply(unsuccessful_busTe
     result = as.Date(date, format = "%d %B %Y")
 })
 
-a = table(sort(unsuccessful_busTechPerks_comment_score$date), unsuccessful_busTechPerks_comment_score$sentiment)
+a = table(unsuccessful_busTechPerks_comment_score$sentiment, sort(unsuccessful_busTechPerks_comment_score$date))
 #Ideally will try to take care of sorting but it is a pain in R
 a
 plot(a, las=2, col = "red", main = "Sentiment over time for Unsuccessful Campaigns" , ylab="Sentiment",xlab = "Date")
@@ -329,7 +330,7 @@ inspect(TDM.common[1:numTerms, 1:10])
 
 TDM.common = as.matrix(TDM.common)
 TDM.common = melt(TDM.common, value.name = "count")
-temp = TDM.common[1:20000,]
+temp = TDM.common[1:10000,]
 
 table(TDM.common$Terms, TDM.common$count)
 
@@ -373,21 +374,20 @@ doc_matrix = create_matrix(subset_busTechPerks$perk_descr, language="english", r
 
 #Plotting k means clustering 
 require(cluster)
-kmeans5 <- kmeans(doc_matrix, 5)
+kmeans4 <- kmeans(doc_matrix, 4)
 
 #Merge cluster assignment back to keywords
 kw_with_cluster <- as.data.frame(cbind(subset_busTechPerks$perk_descr,
-                                       subset_busTechPerks$price, subset_busTechPerks$differential, kmeans5$cluster))
-names(kw_with_cluster) <- c("keyword", "price", "differential", "kmeans5")
+                                       subset_busTechPerks$price, subset_busTechPerks$differential, kmeans4$cluster))
+names(kw_with_cluster) <- c("keyword", "price", "differential", "kmeans4")
 
 #Make df for each cluster result, quickly "eyeball" results
-cluster1 <- subset(kw_with_cluster, subset=kmeans5 == 1)
-cluster2 <- subset(kw_with_cluster, subset=kmeans5 == 2)
-cluster3 <- subset(kw_with_cluster, subset=kmeans5 == 3)
-cluster4 <- subset(kw_with_cluster, subset=kmeans5 == 4)
-cluster5 <- subset(kw_with_cluster, subset=kmeans5 == 5)
+cluster1 <- subset(kw_with_cluster, subset=kmeans4 == 1)
+cluster2 <- subset(kw_with_cluster, subset=kmeans4 == 2)
+cluster3 <- subset(kw_with_cluster, subset=kmeans4 == 3)
+cluster4 <- subset(kw_with_cluster, subset=kmeans4 == 4)
 
-plot(kw_with_cluster, col = kmeans5$cluster)
+plot(kw_with_cluster, col = kmeans4$cluster)
 
 
 # Instead of randomly choosing k, we test to see which is the best
