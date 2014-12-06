@@ -4,3 +4,6 @@ Link to presentation slides can be found [here](https://docs.google.com/presenta
 
 Link to poster can be found [here](http://vis.berkeley.edu/courses/cs294-10-fa14/wiki/images/7/7e/CS294-10_Poster_VisualizingCrowdfunding.pdf)
 
+Link to research paper I wrote found [here](http://vis.berkeley.edu/courses/cs294-10-fa14/wiki/images/3/33/VisualizingCrowdfunding.pdf)
+
+
