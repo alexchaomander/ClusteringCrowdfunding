@@ -1,28 +1,38 @@
 #Function to create a Documenet Term Matrix
-
-createTDM = function(corpus, .progress='none') {
-    require(tm)
-    require(plyr)
-    progress.bar = create_progress_bar(.progress)
-    progress.bar$init(8)
-    doc.vec = VectorSource(corpus)
-    progress.bar$step()
-    doc.corpus = Corpus(doc.vec)
-    progress.bar$step()
-    doc.corpus <- tm_map(doc.corpus, content_transformer(tolower))
-    progress.bar$step()
-    doc.corpus <- tm_map(doc.corpus, removePunctuation)
-    progress.bar$step()
-    doc.corpus <- tm_map(doc.corpus, removeNumbers)
-    progress.bar$step()
-    doc.corpus <- tm_map(doc.corpus, removeWords, stopwords("english"))
-    progress.bar$step()
-    require(SnowballC)
+### corpus is a vector of strings
+### .progress can be "text" to create a progress bar
+### ngrams is the number of grams you wish to look at (monograms, bigrams, etc.)
+### stemming is a boolean that when TRUE will result in stemmed words
+createTDM = function(corpus, .progress='none', ngrams, stemming=FALSE) {
+  require(tm)
+  require(plyr)
+  require(RWeka)
+  require(SnowballC)
+  progress.bar = create_progress_bar(.progress)
+  progress.bar$init(8)
+  doc.vec = VectorSource(corpus)
+  progress.bar$step()
+  doc.corpus = Corpus(doc.vec)
+  progress.bar$step()
+  doc.corpus <- tm_map(doc.corpus, content_transformer(tolower))
+  progress.bar$step()
+  doc.corpus <- tm_map(doc.corpus, removePunctuation)
+  progress.bar$step()
+  doc.corpus <- tm_map(doc.corpus, removeNumbers)
+  progress.bar$step()
+  doc.corpus <- tm_map(doc.corpus, removeWords, stopwords("english"))
+  progress.bar$step()
+  
+  if (stemming) {
     doc.corpus = tm_map(doc.corpus, stemDocument)
-    progress.bar$step()
-    TDM = TermDocumentMatrix(doc.corpus)
-    progress.bar$step()
-    return(TDM)
+  }
+  
+  progress.bar$step()
+  tokenizer = function(x) NGramTokenizer(x, Weka_control(min = ngrams, max = ngrams))
+  TDM = TermDocumentMatrix(doc.corpus, control = list(tokenize = tokenizer))
+  #TDM = TermDocumentMatrix(doc.corpus)
+  progress.bar$step()
+  return(TDM)
 }
 
 # #Each of these words occurred more that 2000 times.
