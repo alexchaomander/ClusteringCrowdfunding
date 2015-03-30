@@ -7,6 +7,7 @@ createWordCloud = function(corpus, .progress='none', ngrams) {
   require(wordcloud)
   require(tm)
   require(plyr)
+  require(RWeka)
   progress.bar = create_progress_bar(.progress)
   progress.bar$init(7)
   doc.vec = VectorSource(corpus)
