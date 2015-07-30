@@ -1,10 +1,10 @@
 #Find frequencies for n-grams. Returns a CSV file with a column of grams and their frequencies
 setwd("~/Desktop/CSR_text")
 source("~/Desktop/ClusteringCrowdfunding/createTDM.R")
-allFiles = list.files("corpus/")
+allFiles = list.files("corpus2/")
 
 gramFrequencyCreator = function(filePath, ngrams) {
-  f = paste("corpus/", filePath, sep="")
+  f = paste("corpus2/", filePath, sep="")
   a = readChar(f, file.info(f)$size)
   corpus = data.frame(Words = a, stringsAsFactors = F)
   TDM = createTDM(corpus$Words, "text", ngrams)
